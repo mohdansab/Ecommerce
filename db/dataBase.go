@@ -10,8 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var Mongo *mongo.Client
-var Collection *mongo.Collection
+var (
+	User     *mongo.Collection
+	Product  *mongo.Collection
+	Mongo    *mongo.Client
+	Database *mongo.Database
+)
 
 func ConnectDB() {
 	Mongo_URL := "mongodb://127.0.0.1:27017"
@@ -29,6 +33,10 @@ func ConnectDB() {
 	}
 
 	Mongo = client
-	Collection = client.Database("crudSoib").Collection("Product")
+	Database = client.Database("crudSoib") // Initialize Database variable
+
+	User = Database.Collection("user")
+	Product = Database.Collection("product")
+
 	fmt.Println("Connected to MongoDB")
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mohdansab/db"
+	"github.com/mohdansab/middleware"
 	"github.com/mohdansab/models"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -25,7 +26,7 @@ func Create(c *gin.Context) {
 		return
 	}
 	var Product2 models.Product
-	err = db.Collection.FindOne(c, bson.M{"name": Product.Name}).Decode(&Product2)
+	err = db.Product.FindOne(c, bson.M{"name": Product.Name}).Decode(&Product2)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err})
 		log.Fatal(err)
@@ -35,7 +36,7 @@ func Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "product already existed"})
 		return
 	}
-	_, err = db.Collection.InsertOne(c, Product)
+	_, err = db.Product.InsertOne(c, Product)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err})
 		log.Fatal(err)
@@ -58,7 +59,7 @@ func Update(c *gin.Context) {
 	update := bson.M{"$set": bson.M{"price": Product.Price}}
 
 	var Product3 models.Product
-	err = db.Collection.FindOne(c, bson.M{"price": Product.Price}).Decode(&Product3)
+	err = db.Product.FindOne(c, bson.M{"price": Product.Price}).Decode(&Product3)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err})
 		log.Fatal(err)
@@ -69,7 +70,7 @@ func Update(c *gin.Context) {
 		return
 	}
 
-	_, err = db.Collection.UpdateOne(c, filter, update)
+	_, err = db.Product.UpdateOne(c, filter, update)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err})
 		log.Fatal(err)
@@ -90,13 +91,13 @@ func Delete(c *gin.Context) {
 	filter := bson.M{"name": Product.Name}
 
 	var Product4 models.Product
-	err = db.Collection.FindOne(c, bson.M{"name": Product.Name}).Decode(&Product4)
+	err = db.Product.FindOne(c, bson.M{"name": Product.Name}).Decode(&Product4)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "not found"})
 		return
 	}
 
-	_, err = db.Collection.DeleteOne(c, filter)
+	_, err = db.Product.DeleteOne(c, filter)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err})
 		log.Fatal(err)
@@ -108,7 +109,7 @@ func Delete(c *gin.Context) {
 
 func ViewAll(c *gin.Context) {
 	var Product []models.Product
-	cur, err := db.Collection.Find(c, bson.M{})
+	cur, err := db.Product.Find(c, bson.M{})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err})
 		log.Fatal(err)
@@ -161,7 +162,7 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	_, err = db.Collection.InsertOne(c, user)
+	_, err = db.User.InsertOne(c, user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err})
 		log.Fatal(err)
@@ -189,7 +190,7 @@ func Login(c *gin.Context) {
 		return
 	}
 	var user2 models.User
-	err = db.Collection.FindOne(c, bson.M{"password": login.Password}).Decode(&user2)
+	err = db.User.FindOne(c, bson.M{"password": login.Password}).Decode(&user2)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "incorrect password"})
 		return
@@ -198,6 +199,14 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "incorrect"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Login Successfull"})
+	tokenString, err := middleware.GenerateJWT(login.Email, 10)
+	c.SetCookie("UserAuth", tokenString, 3600*24*30, "", "", false, true)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": tokenString})
 
 }
