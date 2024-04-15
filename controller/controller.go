@@ -26,12 +26,8 @@ func Create(c *gin.Context) {
 		return
 	}
 	var Product2 models.Product
-	err = db.Product.FindOne(c, bson.M{"name": Product.Name}).Decode(&Product2)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err})
-		log.Fatal(err)
-		return
-	}
+	_ = db.Product.FindOne(c, bson.M{"name": Product.Name}).Decode(&Product2)
+
 	if Product2.Name == Product.Name {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "product already existed"})
 		return
@@ -43,7 +39,7 @@ func Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusBadRequest, gin.H{"Product": Product})
+	c.JSON(http.StatusOK, gin.H{"product": Product})
 
 }
 

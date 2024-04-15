@@ -6,4 +6,5 @@ type User struct {
 	PhoneNo   int    `bson:"number" json:"number"`
 	Email     string `bson:"email" json:"email"`
 	Password  int    `bson:"password" json:"password"`
+	Address   string `bson:"address" json:"address"`
 }

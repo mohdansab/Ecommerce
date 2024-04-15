@@ -13,6 +13,7 @@ import (
 var (
 	User     *mongo.Collection
 	Product  *mongo.Collection
+	Cart     *mongo.Collection
 	Mongo    *mongo.Client
 	Database *mongo.Database
 )
@@ -36,6 +37,7 @@ func ConnectDB() {
 	Database = client.Database("crudSoib") // Initialize Database variable
 
 	User = Database.Collection("user")
+	Cart = Database.Collection("cart")
 	Product = Database.Collection("product")
 
 	fmt.Println("Connected to MongoDB")
